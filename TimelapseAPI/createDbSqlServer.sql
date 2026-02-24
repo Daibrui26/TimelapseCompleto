@@ -102,11 +102,14 @@ INSERT INTO Usuario_Capsula (Id_Usuario, Id_Capsula, Rol) VALUES
 (1, 3, 'participante');
 
 -- Tabla Contenido
-INSERT INTO Contenido (Tipo, Contenido, Fecha_Subida, Id_Capsula) VALUES
-('texto', 'Querido yo del futuro, espero que estés bien.', '2023-01-01', 1),
-('imagen', 'foto_graduacion.jpg', '2022-09-05', 2),
-('video', 'video_vacaciones.mp4', '2021-05-15', 3);
-
+INSERT INTO Contenido (Tipo, Contenido, Fecha_Subida, url_archivo, public_id, Id_Capsula)
+VALUES
+('Texto', 'Introducción al tema de bases de datos relacionales.', '2026-02-20', NULL, NULL, 1),
+('Video', NULL, '2026-02-21', 'https://res.cloudinary.com/demo/video/upload/v1700000000/video1.mp4', 'video1_abc123', 1),
+('PDF', NULL, '2026-02-21', 'https://res.cloudinary.com/demo/raw/upload/v1700000001/documento1.pdf', 'doc1_xyz456', 2),
+('Imagen', NULL, '2026-02-22', 'https://res.cloudinary.com/demo/image/upload/v1700000002/imagen1.jpg', 'img1_def789', 2),
+('Texto', 'Ejemplo práctico paso a paso del ejercicio propuesto.', '2026-02-23', NULL, NULL, 3),
+('Video', NULL, '2026-02-24', 'https://res.cloudinary.com/demo/video/upload/v1700000003/tutorial.mp4', 'video2_ghi101', 3);
 -- Tabla Comentario
 INSERT INTO Comentario (Texto, Fecha_Comentario, Id_Usuario, Id_Capsula) VALUES
 ('Qué recuerdos tan bonitos!', '2023-01-02', 2, 1),
