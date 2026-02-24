@@ -200,6 +200,37 @@ namespace TimelapseAPI.Repositories
             return capsulas;
         }
 
+        // GET BY USUARIO
+public async Task<List<Capsula>> GetByUsuarioAsync(int idUsuario)
+{
+    var capsulas = new List<Capsula>();
+
+    using (var connection = new SqlConnection(_connectionString))
+    {
+        await connection.OpenAsync();
+        string query = @"
+            SELECT c.id_capsula, c.titulo, c.descripcion, c.fecha_creacion, c.fecha_apertura, c.estado, c.visibilidad
+            FROM Capsula c
+            INNER JOIN Usuario_Capsula uc ON c.id_capsula = uc.id_capsula
+            WHERE uc.id_usuario = @IdUsuario";
+
+        using (var command = new SqlCommand(query, connection))
+        {
+            command.Parameters.AddWithValue("@IdUsuario", idUsuario);
+
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    capsulas.Add(MapCapsula(reader));
+                }
+            }
+        }
+    }
+
+    return capsulas;
+}
+
         // Helper para mapear SqlDataReader a Capsula
         private Capsula MapCapsula(SqlDataReader reader)
         {

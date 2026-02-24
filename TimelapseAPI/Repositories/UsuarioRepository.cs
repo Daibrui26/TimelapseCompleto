@@ -75,6 +75,38 @@ namespace TimelapseAPI.Repositories
 
             return null;
         }
+
+        // GET BY EMAIL
+        public async Task<Usuario?> GetByEmailAsync(string email)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                string query = "SELECT id_usuario, nombre, email, contraseña FROM Usuario WHERE email = @Email";
+
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Email", email);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new Usuario
+                            {
+                                IdUsuario = reader.GetInt32(0),
+                                Nombre = reader.GetString(1),
+                                Email = reader.GetString(2),
+                                Contraseña = reader.GetString(3)
+                            };
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
         // GET ALL FILTERED + ORDER
         public async Task<List<Usuario>> GetAllFilteredAsync(string? nombre, string? email, string? orderBy, bool ascending)
         {
@@ -99,7 +131,6 @@ namespace TimelapseAPI.Repositories
                     parameters.Add(new SqlParameter("@Email", $"%{email}%"));
                 }
 
-                // Ordenación
                 if (!string.IsNullOrWhiteSpace(orderBy))
                 {
                     var validColumns = new[] { "id_usuario", "nombre", "email" };
@@ -142,8 +173,6 @@ namespace TimelapseAPI.Repositories
 
             return usuarios;
         }
-    
-
 
         // CREATE
         public async Task CreateAsync(Usuario usuario)
@@ -159,7 +188,6 @@ namespace TimelapseAPI.Repositories
                     command.Parameters.AddWithValue("@Email", usuario.Email);
                     command.Parameters.AddWithValue("@Contraseña", usuario.Contraseña);
 
-                    // Obtener el ID generado
                     var result = await command.ExecuteScalarAsync();
                     usuario.IdUsuario = Convert.ToInt32(result);
                 }

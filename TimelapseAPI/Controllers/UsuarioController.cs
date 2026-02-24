@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TimelapseAPI.Models;
+using TimelapseAPI.Models.DTOs;
 using TimelapseAPI.Services;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,28 @@ namespace TimelapseAPI.Controllers
         public UsuarioController(IUsuarioService usuarioService)
         {
             _usuarioService = usuarioService;
+        }
+
+        // POST: api/Usuario/login
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
+        {
+            try
+            {
+                var result = await _usuarioService.LoginAsync(request);
+                if (result == null)
+                    return Unauthorized(new { mensaje = "Email o contraseña incorrectos." });
+
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = ex.Message });
+            }
         }
 
         // GET: api/Usuario

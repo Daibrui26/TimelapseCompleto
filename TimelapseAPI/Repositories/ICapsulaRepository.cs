@@ -12,6 +12,9 @@ namespace TimelapseAPI.Repositories
         Task CreateAsync(Capsula capsula);
         Task<Capsula?> UpdateAsync(Capsula capsula);
         Task<bool> DeleteAsync(int id);
+        Task<List<Capsula>> GetByUsuarioAsync(int idUsuario);
+
+        
 
        
        

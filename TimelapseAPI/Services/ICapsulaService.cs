@@ -14,5 +14,7 @@ namespace TimelapseAPI.Services
 
         // Búsqueda filtrada y ordenación
         Task<List<Capsula>> GetAllFilteredAsync(string? titulo, string? estado, string? orderBy, bool ascending);
+        Task<List<Capsula>> GetByUsuarioAsync(int idUsuario);    
+    
     }
 }

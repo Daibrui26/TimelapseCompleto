@@ -78,5 +78,13 @@ namespace TimelapseAPI.Services
         {
             return await _capsulaRepository.GetAllFilteredAsync(titulo, estado, orderBy, ascending);
         }
+        
+        public async Task<List<Capsula>> GetByUsuarioAsync(int idUsuario)
+        {
+            if (idUsuario <= 0)
+                throw new ArgumentException("El ID de usuario no es válido.");
+
+            return await _capsulaRepository.GetByUsuarioAsync(idUsuario);
+        }
     }
 }
