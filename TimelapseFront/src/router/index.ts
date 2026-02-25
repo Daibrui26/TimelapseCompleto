@@ -57,6 +57,11 @@ const router = createRouter({
     name: 'Contacto',
     component: () => import('@/views/ContactoView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+  path: '/capsula/:id',
+  name: 'CapsulaDetalle',
+  component: () => import('@/views/CapsulaDetalleView.vue')
   }
 ]
 })

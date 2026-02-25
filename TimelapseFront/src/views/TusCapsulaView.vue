@@ -3,25 +3,26 @@
     <AppHeader variant="app" />
 
     <main class="page__main page__main--capsulas">
-  <p v-if="loading" class="capsulas-list__msg">Cargando cápsulas...</p>
-  <p v-else-if="error" class="capsulas-list__msg">{{ error }}</p>
-  <div v-else-if="capsulas.length === 0" class="capsulas-empty">
-    <p class="capsulas-empty__text">Aún no tienes ninguna cápsula del tiempo.</p>
-    <p class="capsulas-empty__subtext">¡Crea tu primera cápsula y empieza a guardar recuerdos!</p>
-    <RouterLink to="/crear-capsula" class="btn btn--submit capsulas-empty__btn">
-      + Crear mi primera cápsula
-    </RouterLink>
-  </div>
-  <section v-else class="capsulas-list">
-    <CapsuleItem
-      v-for="capsula in capsulas"
-      :key="capsula.idCapsula"
-      :title="capsula.titulo"
-      :date="capsula.fechaApertura"
-      :to="`/capsula/${capsula.idCapsula}`"
-    />
-  </section>
-</main>
+      <p v-if="loading" class="capsulas-list__msg">Cargando cápsulas...</p>
+      <p v-else-if="error" class="capsulas-list__msg">{{ error }}</p>
+      <div v-else-if="capsulas.length === 0" class="capsulas-empty">
+        <p class="capsulas-empty__text">Aún no tienes ninguna cápsula del tiempo.</p>
+        <p class="capsulas-empty__subtext">¡Crea tu primera cápsula y empieza a guardar recuerdos!</p>
+        <RouterLink to="/crear-capsula" class="btn btn--submit capsulas-empty__btn">
+          + Crear mi primera cápsula
+        </RouterLink>
+      </div>
+      <section v-else class="capsulas-list">
+        <CapsuleItem
+          v-for="capsula in capsulas"
+          :key="capsula.idCapsula"
+          :title="capsula.titulo"
+          :date="capsula.fechaApertura"
+          :to="`/capsula/${capsula.idCapsula}`"
+          :emoji="getEmoji(capsula.idCapsula)"
+        />
+      </section>
+    </main>
 
     <BottomNav />
   </div>
@@ -29,6 +30,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import BottomNav from '@/components/BottomNav.vue'
 import CapsuleItem from '@/components/CapsuleItem.vue'
@@ -56,4 +58,13 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+function getEmoji(id: number): string {
+  try {
+    const guardados = JSON.parse(localStorage.getItem('capsula_emojis') || '{}')
+    return guardados[id] ?? '⏳'
+  } catch {
+    return '⏳'
+  }
+}
 </script>

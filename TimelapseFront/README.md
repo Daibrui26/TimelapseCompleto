@@ -44,4 +44,4 @@ npm run build
 
 COMANDO PARA LOS SCSS
 
-sass --watch scss/main.scss:css/styles.css
+sass --watch scss/main.scss:styles/styles.css
