@@ -37,6 +37,25 @@ namespace TimelapseAPI.Controllers
             return Ok(capsula);
         }
 
+        // GET: api/Capsula/usuario/5
+        [HttpGet("usuario/{idUsuario}")]
+        public async Task<ActionResult<List<Capsula>>> GetByUsuario(int idUsuario)
+        {
+            try
+            {
+                var capsulas = await _capsulaService.GetByUsuarioAsync(idUsuario);
+                return Ok(capsulas);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         // POST - CREATE
         [HttpPost]
         public async Task<ActionResult<Capsula>> Create(Capsula capsula)

@@ -6,7 +6,6 @@ using TimelapseAPI.Repositories;
 
 namespace TimelapseAPI.Services
 {
-
     public class UsuarioCapsulaService : IUsuarioCapsulaService
     {
         private readonly IUsuarioCapsulaRepository _usuarioCapsulaRepository;
@@ -26,9 +25,13 @@ namespace TimelapseAPI.Services
             return await _usuarioCapsulaRepository.GetByIdAsync(id);
         }
 
+        public async Task<List<UsuarioCapsula>> GetByCapsulaAsync(int idCapsula)
+        {
+            return await _usuarioCapsulaRepository.GetByCapsulaAsync(idCapsula);
+        }
+
         public async Task<UsuarioCapsula> CreateAsync(UsuarioCapsula usuarioCapsula)
         {
-            // Validaciones básicas antes de crear un registro
             if (usuarioCapsula.IdUsuario <= 0)
                 throw new ArgumentException("El IdUsuario debe ser válido.");
 
@@ -36,7 +39,7 @@ namespace TimelapseAPI.Services
                 throw new ArgumentException("El IdCapsula debe ser válido.");
 
             if (string.IsNullOrWhiteSpace(usuarioCapsula.Rol))
-                usuarioCapsula.Rol = "miembro"; // Rol por defecto
+                usuarioCapsula.Rol = "miembro";
 
             return await _usuarioCapsulaRepository.CreateAsync(usuarioCapsula);
         }

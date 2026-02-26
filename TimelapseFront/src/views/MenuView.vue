@@ -6,9 +6,8 @@
       <section class="card card--profile">
         <img src="@/assets/img/Perfil.png" alt="Perfil" class="card__profile-img" />
         <div class="card__profile-info">
-          <h2 class="card__title">Usuario</h2>
-          <p class="card__subtitle">correousuario@gmail.com</p>
-        </div>
+          <h2 class="card__title">{{ authStore.usuario?.nombre }}</h2>
+          <p class="card__subtitle">{{ authStore.usuario?.email }}</p>        </div>
       </section>
 
       <section class="card card--menu">
@@ -49,14 +48,14 @@
 
       <section class="card card--menu">
         <nav class="menu-nav">
-          <RouterLink to="/" class="menu-nav__item menu-nav__item--danger">
+          <button @click="cerrarSesion" class="menu-nav__item menu-nav__item--danger" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;">
             <img src="@/assets/img/salir.png" class="menu-nav__icon" alt="Salir" />
             Cerrar Sesión
-          </RouterLink>
-          <a href="#" class="menu-nav__item menu-nav__item--danger">
+          </button>
+          <button @click="eliminarCuenta" class="menu-nav__item menu-nav__item--danger" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;">
             <img src="@/assets/img/Papelera.png" class="menu-nav__icon" alt="Eliminar" />
             Eliminar Cuenta
-          </a>
+          </button>
         </nav>
       </section>
     </main>
@@ -64,6 +63,29 @@
 </template>
 
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import { useAuthStore } from '@/stores/auth'
+import { api } from '@/services/api'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+function cerrarSesion() {
+  authStore.logout()
+  router.push('/iniciar-sesion')
+}
+
+async function eliminarCuenta() {
+  const confirmado = confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')
+  if (!confirmado) return
+
+  try {
+    await api.delete(`/Usuario/${authStore.usuario?.idUsuario}`)
+    authStore.logout()
+    router.push('/iniciar-sesion')
+  } catch (err) {
+    alert('Error al eliminar la cuenta. Inténtalo de nuevo.')
+  }
+}
 </script>

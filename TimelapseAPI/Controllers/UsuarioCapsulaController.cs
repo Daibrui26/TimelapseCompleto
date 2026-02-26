@@ -33,6 +33,14 @@ namespace TimelapseAPI.Controllers
             return Ok(item);
         }
 
+        // GET: api/UsuarioCapsula/capsula/5
+        [HttpGet("capsula/{idCapsula}")]
+        public async Task<ActionResult<List<UsuarioCapsula>>> GetByCapsula(int idCapsula)
+        {
+            var lista = await _usuarioCapsulaService.GetByCapsulaAsync(idCapsula);
+            return Ok(lista);
+        }
+
         [HttpPost]
         public async Task<ActionResult<UsuarioCapsula>> Create([FromBody] UsuarioCapsula usuarioCapsula)
         {

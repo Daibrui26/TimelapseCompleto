@@ -33,7 +33,10 @@
 
           <hr class="form__separator" />
 
-          <button type="submit" class="btn btn--submit">Registrarse</button>
+          <p v-if="error" class="form__error">{{ error }}</p>
+          <button type="submit" class="btn btn--submit" :disabled="loading">
+            {{ loading ? 'Registrando...' : 'Registrarse' }}
+          </button>
           <RouterLink to="/" class="btn btn--cancel">Cancelar</RouterLink>
         </form>
 
@@ -47,14 +50,52 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import { useAuthStore } from '@/stores/auth'
+import { authService } from '@/services/authservice'
 
 const router = useRouter()
-const form = reactive({ nombre: '', email: '', password: '', confirmPassword: '', fechaNac: '' })
+const authStore = useAuthStore()
 
-function handleRegister() {
-  router.push('/home')
+const form = reactive({ nombre: '', email: '', password: '', confirmPassword: '', fechaNac: '' })
+const error = ref('')
+const loading = ref(false)
+
+async function handleRegister() {
+  error.value = ''
+
+  if (form.password !== form.confirmPassword) {
+    error.value = 'Las contraseñas no coinciden.'
+    return
+  }
+
+  if (form.password.length < 8) {
+    error.value = 'La contraseña debe tener al menos 8 caracteres.'
+    return
+  }
+
+  loading.value = true
+
+  try {
+    const response = await authService.register({
+      nombre: form.nombre,
+      email: form.email,
+      contraseña: form.password
+    })
+
+    authStore.setUsuario({
+      idUsuario: response.idUsuario,
+      nombre: response.nombre,
+      email: response.email
+    })
+
+    router.push('/home')
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Error al registrarse'
+  } finally {
+    loading.value = false
+  }
 }
 </script>

@@ -53,3 +53,36 @@
     font-size: $font-size-small;
     margin: 0;
 }
+// Estado vacío
+.capsulas-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-lg;
+    background: $color-background;
+    border-radius: $border-radius-xl;
+    padding: $spacing-xxl 35px;
+    box-shadow: $shadow-md;
+    text-align: center;
+    width: 100%;
+  
+    &__text {
+      color: $color-primary;
+      font-size: $font-size-large;
+      font-weight: 600;
+      margin: 0;
+    }
+  
+    &__subtext {
+      color: $color-dark;
+      font-size: $font-size-base;
+      margin: 0;
+      line-height: 1.5;
+    }
+  
+    &__btn {
+      margin-top: $spacing-sm;
+      width: 100%;
+      max-width: 320px;
+    }
+  }

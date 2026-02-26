@@ -32,6 +32,10 @@
             <label class="perfil-form__label">Contraseña</label>
             <input v-model="perfil.password" type="password" class="perfil-form__input" :disabled="!isEditing" />
           </div>
+          <div class="perfil-form__group" v-if="isEditing">
+            <label class="perfil-form__label">Repetir Contraseña</label>
+            <input v-model="perfil.confirmPassword" type="password" class="perfil-form__input" placeholder="Repite la nueva contraseña" />
+            </div>
           <div class="perfil-form__group">
             <label class="perfil-form__label">Fecha Nac.</label>
             <input v-model="perfil.fechaNac" type="date" class="perfil-form__input" :disabled="!isEditing" />
@@ -43,13 +47,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
+import { useAuthStore } from '@/stores/auth'
+import { api } from '@/services/api'
 
+const authStore = useAuthStore()
 const isEditing = ref(false)
-const perfil = reactive({ nombre: '', email: '', password: '', fechaNac: '' })
+const perfil = reactive({ nombre: '', email: '', password: '', confirmPassword: '', fechaNac: '' })
 
-function toggleEdit() {
-  isEditing.value = !isEditing.value
+onMounted(() => {
+  perfil.nombre = authStore.usuario?.nombre ?? ''
+  perfil.email = authStore.usuario?.email ?? ''
+})
+
+async function toggleEdit() {
+  if (!isEditing.value) {
+    isEditing.value = true
+    return
+  }
+  if (perfil.password && perfil.password !== perfil.confirmPassword) {
+  alert('Las contraseñas no coinciden.')
+  return
+}
+
+  try {
+    // Si no ha escrito nueva contraseña, recuperamos la actual de la API
+    let contraseñaFinal = perfil.password
+    if (!contraseñaFinal) {
+      const usuarioActual = await api.get<{ contraseña: string }>(`/Usuario/${authStore.usuario?.idUsuario}`)
+      contraseñaFinal = usuarioActual.contraseña
+    }
+
+    await api.put(`/Usuario/${authStore.usuario?.idUsuario}`, {
+      idUsuario: authStore.usuario?.idUsuario,
+      nombre: perfil.nombre,
+      email: perfil.email,
+      contraseña: contraseñaFinal
+    })
+
+    authStore.setUsuario({
+      idUsuario: authStore.usuario!.idUsuario,
+      nombre: perfil.nombre,
+      email: perfil.email
+    })
+
+    perfil.password = '' // limpiamos el campo tras guardar
+    isEditing.value = false
+    alert('Perfil actualizado correctamente.')
+  } catch (err) {
+    alert(err instanceof Error ? err.message : 'Error al guardar los cambios.')
+  }
 }
 </script>

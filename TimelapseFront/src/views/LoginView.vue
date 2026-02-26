@@ -17,7 +17,10 @@
             <input v-model="form.password" type="password" id="password" class="form__input" placeholder="••••••••" required />
           </div>
           <a href="#" class="login__forgot">¿Olvidaste tu contraseña?</a>
-          <button type="submit" class="btn btn--submit btn--login">Iniciar sesión</button>
+          <p v-if="error" class="form__error">{{ error }}</p>
+          <button type="submit" class="btn btn--submit btn--login" :disabled="loading">
+           {{ loading ? 'Entrando...' : 'Iniciar sesión' }}
+          </button>
         </form>
 
         <div class="login__divider">
@@ -36,15 +39,41 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
+import { useAuthStore } from '@/stores/auth'
+import { authService } from '@/services/authservice'
 
 const router = useRouter()
-const form = reactive({ email: '', password: '' })
+const authStore = useAuthStore()
 
-function handleLogin() {
-  router.push('/home')
+const form = reactive({ email: '', password: '' })
+const error = ref('')
+const loading = ref(false)
+
+async function handleLogin() {
+  error.value = ''
+  loading.value = true
+
+  try {
+    const response = await authService.login({
+      email: form.email,
+      contraseña: form.password   // tu form usa "password", la API espera "contraseña"
+    })
+
+    authStore.setUsuario({
+      idUsuario: response.idUsuario,
+      nombre: response.nombre,
+      email: response.email
+    })
+
+    router.push('/home')
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Email o contraseña incorrectos'
+  } finally {
+    loading.value = false
+  }
 }
 </script>

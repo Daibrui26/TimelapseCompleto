@@ -1,4 +1,5 @@
 using TimelapseAPI.Models;
+using TimelapseAPI.Models.DTOs;
 using TimelapseAPI.Repositories;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,6 @@ namespace TimelapseAPI.Services
     public class UsuarioService : IUsuarioService
     {
         private readonly IUsuarioRepository _usuarioRepository;
-        
 
         public UsuarioService(IUsuarioRepository usuarioRepository)
         {
@@ -28,6 +28,7 @@ namespace TimelapseAPI.Services
 
             return await _usuarioRepository.GetByIdAsync(id);
         }
+
         public async Task<List<Usuario>> GetAllFilteredAsync(string? nombre, string? email, string? orderBy, bool ascending)
         {
             return await _usuarioRepository.GetAllFilteredAsync(nombre, email, orderBy, ascending);
@@ -74,6 +75,25 @@ namespace TimelapseAPI.Services
             var deleted = await _usuarioRepository.DeleteAsync(id);
             if (!deleted)
                 throw new KeyNotFoundException("Usuario no encontrado para eliminar.");
+        }
+
+        // LOGIN: busca por email y compara contraseña en texto plano
+        public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDTO request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Contraseña))
+                throw new ArgumentException("Email y contraseña son obligatorios.");
+
+            var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
+
+            if (usuario == null || usuario.Contraseña != request.Contraseña)
+                return null; // Credenciales incorrectas
+
+            return new LoginResponseDTO
+            {
+                IdUsuario = usuario.IdUsuario,
+                Nombre = usuario.Nombre,
+                Email = usuario.Email
+            };
         }
     }
 }
