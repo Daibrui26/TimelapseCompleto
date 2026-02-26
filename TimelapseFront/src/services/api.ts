@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5167/api' //Cambiar cuando toque
+const BASE_URL = '/api' //Cambiar cuando toque
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
