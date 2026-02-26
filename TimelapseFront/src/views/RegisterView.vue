@@ -88,7 +88,8 @@ async function handleRegister() {
     authStore.setUsuario({
       idUsuario: response.idUsuario,
       nombre: response.nombre,
-      email: response.email
+      email: response.email,
+      rol: response.rol ?? 'usuario'
     })
 
     router.push('/home')

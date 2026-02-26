@@ -66,7 +66,8 @@ async function handleLogin() {
     authStore.setUsuario({
       idUsuario: response.idUsuario,
       nombre: response.nombre,
-      email: response.email
+      email: response.email,
+      rol: response.rol
     })
 
     router.push('/home')

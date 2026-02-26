@@ -6,7 +6,7 @@
 
 .page {
     font-family: $font-family;          // Aplica la tipografía definida en variables (Arial, sans-serif)
-    background-image: url('../img/fondo.png'); // Imagen de fondo para toda la página
+    background-image: url('@/assets//img/fondo.png'); // Imagen de fondo para toda la página
     background-size: cover;             // La imagen cubre todo el área, ajustándose proporcionalmente
     background-position: center;        // Centra la imagen de fondo
     background-repeat: no-repeat;       // Evita que la imagen se repita

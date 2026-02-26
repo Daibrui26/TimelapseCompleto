@@ -92,7 +92,8 @@ namespace TimelapseAPI.Services
             {
                 IdUsuario = usuario.IdUsuario,
                 Nombre = usuario.Nombre,
-                Email = usuario.Email
+                Email = usuario.Email,
+                Rol = usuario.Rol
             };
         }
     }
