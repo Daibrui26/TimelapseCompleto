@@ -374,7 +374,7 @@ async function handleSubmit() {
           formData.append('IdCapsula', String(idCapsula))
           formData.append('Tipo', getTipo(file))
           formData.append('Archivo', file)
-          return fetch(`${(api as any).BASE_URL ?? 'http://localhost:5167/api'}/Contenido/archivo`, {
+          return fetch('/api/Contenido/archivo', {
             method: 'POST',
             body: formData
           })
