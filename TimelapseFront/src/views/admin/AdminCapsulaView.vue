@@ -12,7 +12,7 @@
         <input
           v-model="busqueda"
           class="admin-table__search-input"
-          placeholder="Buscar por título o estado..."
+          placeholder="Buscar por título, estado o creador..."
         />
       </div>
 
@@ -24,6 +24,7 @@
           <tr>
             <th>ID</th>
             <th>Título</th>
+            <th>Creador</th>
             <th>Estado</th>
             <th>Visibilidad</th>
             <th>Apertura</th>
@@ -32,13 +33,20 @@
         </thead>
         <tbody>
           <tr v-if="capsulasFiltradas.length === 0">
-            <td colspan="6" style="text-align:center; padding:40px; color:#999">
+            <td colspan="7" style="text-align:center; padding:40px; color:#999">
               No se encontraron cápsulas
             </td>
           </tr>
           <tr v-for="c in capsulasFiltradas" :key="c.idCapsula">
             <td>#{{ c.idCapsula }}</td>
             <td>{{ c.titulo }}</td>
+            <td>
+              <span v-if="creadores[c.idCapsula]">
+                👤 {{ creadores[c.idCapsula].nombre }}
+                <span style="color:#999; font-size:12px">(#{{ creadores[c.idCapsula].id }})</span>
+              </span>
+              <span v-else style="color:#999; font-size:12px">—</span>
+            </td>
             <td>
               <span class="admin-table__badge" :class="`admin-table__badge--${c.estado}`">
                 {{ c.estado }}
@@ -129,7 +137,21 @@ interface Capsula {
   visibilidad: string
 }
 
+interface UsuarioCapsula {
+  idUsuarioCapsula: number
+  idUsuario: number
+  idCapsula: number
+  rol: string
+}
+
+interface Usuario {
+  idUsuario: number
+  nombre: string
+}
+
 const capsulas = ref<Capsula[]>([])
+// mapa idCapsula → nombre del creador
+const creadores = ref<Record<number, { id: number, nombre: string }>>({})
 const loading = ref(true)
 const error = ref('')
 const busqueda = ref('')
@@ -152,7 +174,8 @@ const capsulasFiltradas = computed(() => {
   if (!q) return capsulas.value
   return capsulas.value.filter(c =>
     c.titulo.toLowerCase().includes(q) ||
-    c.estado.toLowerCase().includes(q)
+    c.estado.toLowerCase().includes(q) ||
+    (creadores.value[c.idCapsula] ?.nombre ?? '').toLowerCase().includes(q)
   )
 })
 
@@ -164,11 +187,41 @@ async function cargarCapsulas() {
   loading.value = true
   try {
     capsulas.value = await api.get<Capsula[]>('/Capsula')
+    await cargarCreadores()
   } catch {
     error.value = 'Error al cargar cápsulas'
   } finally {
     loading.value = false
   }
+}
+
+async function cargarCreadores() {
+  // Cargamos todos los Usuario_Capsula de golpe
+  const todas = await api.get<UsuarioCapsula[]>('/UsuarioCapsula')
+
+  // Filtramos solo los creadores y obtenemos ids de usuario únicos
+  const soloCreadores = todas.filter(uc => uc.rol === 'creador')
+  const idsUnicos = [...new Set(soloCreadores.map(uc => uc.idUsuario))]
+
+  // Cargamos los usuarios necesarios en paralelo
+  const usuarios = await Promise.all(
+    idsUnicos.map(id => api.get<Usuario>(`/Usuario/${id}`))
+  )
+
+  // Mapa idUsuario → nombre
+  const mapaUsuarios: Record<number, string> = {}
+  usuarios.forEach(u => { mapaUsuarios[u.idUsuario] = u.nombre })
+
+  // Mapa idCapsula → nombre del creador
+  const mapaCreadores: Record<number, { id: number, nombre: string }> = {}
+  soloCreadores.forEach(uc => {
+   mapaCreadores[uc.idCapsula] = {
+      id: uc.idUsuario,
+      nombre: mapaUsuarios[uc.idUsuario] ?? '—'
+    }
+  })
+
+  creadores.value = mapaCreadores
 }
 
 function abrirModalEditar(c: Capsula) {

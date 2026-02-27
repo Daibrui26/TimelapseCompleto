@@ -122,21 +122,65 @@ namespace TimelapseAPI.Repositories
 
         // DELETE
         public async Task<bool> DeleteAsync(int id)
+{
+    using (var connection = new SqlConnection(_connectionString))
+    {
+        await connection.OpenAsync();
+        using var transaction = connection.BeginTransaction();
+
+        try
         {
-            using (var connection = new SqlConnection(_connectionString))
+            // 1. Borrar contenido
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Contenido WHERE id_capsula = @Id", connection, transaction))
             {
-                await connection.OpenAsync();
-
-                string query = "DELETE FROM Capsula WHERE id_capsula=@Id";
-
-                using (var command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@Id", id);
-                    var rows = await command.ExecuteNonQueryAsync();
-                    return rows > 0;
-                }
+                cmd.Parameters.AddWithValue("@Id", id);
+                await cmd.ExecuteNonQueryAsync();
             }
+
+            // 2. Borrar comentarios
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Comentario WHERE id_capsula = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // 3. Borrar notificaciones
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Notificacion WHERE id_capsula = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // 4. Borrar participantes
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Usuario_Capsula WHERE id_capsula = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // 5. Borrar la cápsula
+            int rows;
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Capsula WHERE id_capsula = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                rows = await cmd.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+            return rows > 0;
         }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+}
 
         // GET ALL FILTERED + ORDER
         public async Task<List<Capsula>> GetAllFilteredAsync(string? titulo, string? estado, string? orderBy, bool ascending)

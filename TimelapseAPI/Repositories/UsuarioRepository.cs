@@ -225,19 +225,64 @@ namespace TimelapseAPI.Repositories
 
         // DELETE
         public async Task<bool> DeleteAsync(int id)
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync();
-                string query = "DELETE FROM Usuario WHERE id_usuario=@Id";
+{
+    using (var connection = new SqlConnection(_connectionString))
+    {
+        await connection.OpenAsync();
+        using var transaction = connection.BeginTransaction();
 
-                using (var command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@Id", id);
-                    var rows = await command.ExecuteNonQueryAsync();
-                    return rows > 0;
-                }
+        try
+        {
+            // 1. Borrar comentarios del usuario
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Comentario WHERE id_usuario = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                await cmd.ExecuteNonQueryAsync();
             }
+
+            // 2. Borrar notificaciones del usuario
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Notificacion WHERE id_usuario = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // 3. Borrar amistades del usuario
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Amistad WHERE id_usuario1 = @Id OR id_usuario2 = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // 4. Borrar participaciones en cápsulas
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Usuario_Capsula WHERE id_usuario = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // 5. Borrar el usuario
+            int rows;
+            using (var cmd = new SqlCommand(
+                "DELETE FROM Usuario WHERE id_usuario = @Id", connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                rows = await cmd.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+            return rows > 0;
         }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+}
     }
 }
