@@ -9,6 +9,7 @@ export interface LoginResponse {
   idUsuario: number
   nombre: string
   email: string
+  rol: string
 }
 
 export interface RegisterRequest {

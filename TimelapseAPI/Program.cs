@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
         policy => policy
             .WithOrigins(
             "http://localhost:5173",
-            "http://frontend"          // ← añadir esto
+            "http://frontend"
 )
             .AllowAnyHeader()
             .AllowAnyMethod()

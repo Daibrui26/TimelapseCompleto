@@ -1,16 +1,22 @@
 CREATE DATABASE TimelapseDB;
-
-SELECT name, database_id, create database_id
-FROM sys.databases 
-WHERE name = 'TimelapseDB';
+GO
 
 USE TimelapseDB;
+GO
+
+-- Verificar si existe la base de datos
+SELECT name, database_id, create_date
+FROM sys.databases 
+WHERE name = 'TimelapseDB';
+GO
 
 CREATE TABLE Usuario (
     Id_Usuario INT IDENTITY(1,1) PRIMARY KEY,
     Nombre NVARCHAR(100),
     Email NVARCHAR(150) NOT NULL UNIQUE,
-    Contraseña NVARCHAR(255) NOT NULL
+    Contraseña NVARCHAR(255) NOT NULL,
+    Rol NVARCHAR(20) NOT NULL DEFAULT 'usuario',
+    CONSTRAINT CHK_Usuario_Rol CHECK (Rol IN ('admin', 'usuario'))
 );
 
 -- Tabla Capsula
@@ -81,11 +87,11 @@ CREATE TABLE Amistad (
 );
 
 -- Tabla Usuario
-INSERT INTO Usuario (Nombre, Email, Contraseña) VALUES
-('Ana Pérez', 'ana.perez@email.com', 'contraseña123'),
-('Luis Gómez', 'luis.gomez@email.com', 'pass456'),
-('María López', 'maria.lopez@email.com', 'abc123'),
-('Carlos Sánchez', 'carlos.sanchez@email.com', 'clave789');
+INSERT INTO Usuario (Nombre, Email, Contraseña, Rol) VALUES
+('Ana Pérez', 'ana.perez@email.com', 'contraseña123', 'admin'),
+('Luis Gómez', 'luis.gomez@email.com', 'pass456', 'usuario'),
+('María López', 'maria.lopez@email.com', 'abc123', 'usuario'),
+('Carlos Sánchez', 'carlos.sanchez@email.com', 'clave789', 'admin');
 
 -- Tabla Capsula
 INSERT INTO Capsula (Titulo, Descripcion, Fecha_Creacion, Fecha_Apertura, Estado, Visibilidad) VALUES
