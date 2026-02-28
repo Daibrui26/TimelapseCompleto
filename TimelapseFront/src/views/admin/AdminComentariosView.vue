@@ -32,15 +32,11 @@
         </thead>
         <tbody>
           <tr v-if="comentariosFiltrados.length === 0">
-            <td colspan="6" style="text-align:center; padding:40px; color:#999">
-              No se encontraron comentarios
-            </td>
+            <td colspan="6" style="text-align:center; padding:40px; color:#999">No se encontraron comentarios</td>
           </tr>
           <tr v-for="c in comentariosFiltrados" :key="c.idComentario">
             <td>#{{ c.idComentario }}</td>
-            <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
-              {{ c.texto }}
-            </td>
+            <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ c.texto }}</td>
             <td>#{{ c.idUsuario }}</td>
             <td>#{{ c.idCapsula }}</td>
             <td>{{ formatFecha(c.fechaComentario) }}</td>
@@ -61,19 +57,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { api } from '@/services/api'
+import { useToast } from '@/composables/useToast'
+import { useConfirm } from '@/composables/useConfirm'
 
 interface Comentario {
-  idComentario: number
-  texto: string
-  fechaComentario: string
-  idUsuario: number
-  idCapsula: number
+  idComentario: number; texto: string; fechaComentario: string; idUsuario: number; idCapsula: number
 }
 
+const toast       = useToast()
+const { confirm } = useConfirm()
+
 const comentarios = ref<Comentario[]>([])
-const loading = ref(true)
-const error = ref('')
-const busqueda = ref('')
+const loading     = ref(true)
+const error       = ref('')
+const busqueda    = ref('')
 
 const comentariosFiltrados = computed(() => {
   const q = busqueda.value.toLowerCase()
@@ -81,35 +78,34 @@ const comentariosFiltrados = computed(() => {
   return comentarios.value.filter(c => c.texto.toLowerCase().includes(q))
 })
 
-onMounted(async () => {
-  await cargarComentarios()
-})
+onMounted(async () => { await cargarComentarios() })
 
 async function cargarComentarios() {
   loading.value = true
-  try {
-    comentarios.value = await api.get<Comentario[]>('/Comentario')
-  } catch {
-    error.value = 'Error al cargar comentarios'
-  } finally {
-    loading.value = false
-  }
+  try { comentarios.value = await api.get<Comentario[]>('/Comentario') }
+  catch { error.value = 'Error al cargar comentarios' }
+  finally { loading.value = false }
 }
 
 async function eliminarComentario(id: number) {
-  if (!confirm('¿Seguro que quieres eliminar este comentario?')) return
+  const ok = await confirm({
+    title:       'Eliminar comentario',
+    message:     '¿Seguro que quieres eliminar este comentario?',
+    confirmText: 'Eliminar',
+    danger:      true
+  })
+  if (!ok) return
   try {
     await api.delete(`/Comentario/${id}`)
     await cargarComentarios()
+    toast.success('Comentario eliminado.')
   } catch {
-    error.value = 'Error al eliminar el comentario'
+    toast.error('Error al eliminar el comentario.')
   }
 }
 
 function formatFecha(fecha: string): string {
   if (!fecha) return ''
-  return new Date(fecha).toLocaleDateString('es-ES', {
-    day: '2-digit', month: 'short', year: 'numeric'
-  })
+  return new Date(fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 </script>

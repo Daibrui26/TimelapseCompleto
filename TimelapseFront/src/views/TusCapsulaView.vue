@@ -3,18 +3,20 @@
     <AppHeader variant="app" />
 
     <main class="page__main page__main--capsulas">
-      <p v-if="loading" class="capsulas-list__msg">Cargando cápsulas...</p>
-      <p v-else-if="error" class="capsulas-list__msg">{{ error }}</p>
-      <div v-else-if="capsulas.length === 0" class="capsulas-empty">
+      <p v-if="capsulaStore.loading" class="capsulas-list__msg">Cargando cápsulas...</p>
+      <p v-else-if="capsulaStore.error" class="capsulas-list__msg">{{ capsulaStore.error }}</p>
+
+      <div v-else-if="capsulaStore.total === 0" class="capsulas-empty">
         <p class="capsulas-empty__text">Aún no tienes ninguna cápsula del tiempo.</p>
         <p class="capsulas-empty__subtext">¡Crea tu primera cápsula y empieza a guardar recuerdos!</p>
         <RouterLink to="/crear-capsula" class="btn btn--submit capsulas-empty__btn">
           + Crear mi primera cápsula
         </RouterLink>
       </div>
+
       <section v-else class="capsulas-list">
         <CapsuleItem
-          v-for="capsula in capsulas"
+          v-for="capsula in capsulaStore.capsulas"
           :key="capsula.idCapsula"
           :title="capsula.titulo"
           :date="capsula.fechaApertura"
@@ -29,33 +31,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import BottomNav from '@/components/BottomNav.vue'
 import CapsuleItem from '@/components/CapsuleItem.vue'
 import { useAuthStore } from '@/stores/auth'
-import { api } from '@/services/api'
+import { useCapsulaStore } from '@/stores/capsulas'
 
-interface Capsula {
-  idCapsula: number
-  titulo: string
-  fechaApertura: string
-}
-
-const authStore = useAuthStore()
-const capsulas = ref<Capsula[]>([])
-const loading = ref(true)
-const error = ref('')
+const authStore    = useAuthStore()
+const capsulaStore = useCapsulaStore()
 
 onMounted(async () => {
-  try {
-    const data = await api.get<Capsula[]>(`/Capsula/usuario/${authStore.usuario?.idUsuario}`)
-    capsulas.value = data
-  } catch (err) {
-    error.value = 'Error al cargar las cápsulas.'
-  } finally {
-    loading.value = false
+  if (authStore.usuario?.idUsuario) {
+    await capsulaStore.fetchByUsuario(authStore.usuario.idUsuario)
   }
 })
 
