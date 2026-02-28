@@ -7,7 +7,8 @@
         <img src="@/assets/img/Perfil.png" alt="Perfil" class="card__profile-img" />
         <div class="card__profile-info">
           <h2 class="card__title">{{ authStore.usuario?.nombre }}</h2>
-          <p class="card__subtitle">{{ authStore.usuario?.email }}</p>        </div>
+          <p class="card__subtitle">{{ authStore.usuario?.email }}</p>
+        </div>
       </section>
 
       <section class="card card--menu">
@@ -26,7 +27,7 @@
           </RouterLink>
           <RouterLink v-if="authStore.isAdmin" to="/admin" class="menu-nav__item">
             <img src="@/assets/img/Stats.png" class="menu-nav__icon" alt="Admin" />
-              Panel de Administración
+            Panel de Administración
           </RouterLink>
           <a href="#" class="menu-nav__item">
             <img src="@/assets/img/Bandeja.png" class="menu-nav__icon" alt="Bandeja" />
@@ -52,11 +53,19 @@
 
       <section class="card card--menu">
         <nav class="menu-nav">
-          <button @click="cerrarSesion" class="menu-nav__item menu-nav__item--danger" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;">
+          <button
+            @click="cerrarSesion"
+            class="menu-nav__item menu-nav__item--danger"
+            style="background:none;border:none;width:100%;text-align:left;cursor:pointer;"
+          >
             <img src="@/assets/img/salir.png" class="menu-nav__icon" alt="Salir" />
             Cerrar Sesión
           </button>
-          <button @click="eliminarCuenta" class="menu-nav__item menu-nav__item--danger" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;">
+          <button
+            @click="eliminarCuenta"
+            class="menu-nav__item menu-nav__item--danger"
+            style="background:none;border:none;width:100%;text-align:left;cursor:pointer;"
+          >
             <img src="@/assets/img/Papelera.png" class="menu-nav__icon" alt="Eliminar" />
             Eliminar Cuenta
           </button>
@@ -70,10 +79,14 @@
 import { RouterLink, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
+import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
 
-const router = useRouter()
+const router    = useRouter()
 const authStore = useAuthStore()
+const toast     = useToast()
+const { confirm } = useConfirm()
 
 function cerrarSesion() {
   authStore.logout()
@@ -81,15 +94,21 @@ function cerrarSesion() {
 }
 
 async function eliminarCuenta() {
-  const confirmado = confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')
-  if (!confirmado) return
+  const ok = await confirm({
+    title:       'Eliminar cuenta',
+    message:     '¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.',
+    confirmText: 'Eliminar',
+    cancelText:  'Cancelar',
+    danger:      true
+  })
+  if (!ok) return
 
   try {
     await api.delete(`/Usuario/${authStore.usuario?.idUsuario}`)
     authStore.logout()
     router.push('/iniciar-sesion')
-  } catch (err) {
-    alert('Error al eliminar la cuenta. Inténtalo de nuevo.')
+  } catch {
+    toast.error('Error al eliminar la cuenta. Inténtalo de nuevo.')
   }
 }
 </script>
