@@ -108,6 +108,81 @@
           </div>
         </section>
 
+        <!-- Comentarios -->
+        <section class="card capsula-seccion">
+          <h2 class="capsula-seccion__titulo">
+            Comentarios
+            <span style="font-weight:400; color:#aaa; font-size:13px; margin-left:8px">
+              ({{ comentarios.length }})
+            </span>
+          </h2>
+
+          <div class="capsula-comentarios">
+
+            <!-- Formulario si puede comentar -->
+            <div v-if="puedeComentarr" class="capsula-comentarios__form">
+              <textarea
+                v-model="nuevoComentario"
+                class="capsula-comentarios__textarea"
+                placeholder="Escribe un comentario..."
+                :disabled="enviandoComentario"
+              />
+              <button
+                class="capsula-comentarios__submit"
+                :disabled="!nuevoComentario.trim() || enviandoComentario"
+                @click="enviarComentario"
+              >
+                {{ enviandoComentario ? 'Enviando...' : 'Comentar' }}
+              </button>
+            </div>
+
+            <!-- Sin acceso -->
+            <div v-else class="capsula-comentarios__no-access">
+              🔒 Solo los participantes de esta cápsula pueden comentar
+            </div>
+
+            <!-- Cargando comentarios -->
+            <p v-if="loadingComentarios" class="capsula-comentarios__empty">
+              Cargando comentarios...
+            </p>
+
+            <!-- Sin comentarios -->
+            <div v-else-if="comentarios.length === 0" class="capsula-comentarios__empty">
+              Aún no hay comentarios. ¡Sé el primero!
+            </div>
+
+            <!-- Lista de comentarios -->
+            <div v-else class="capsula-comentarios__list">
+              <div
+                v-for="c in comentarios"
+                :key="c.idComentario"
+                class="capsula-comentarios__item"
+              >
+                <div class="capsula-comentarios__item-header">
+                  <span class="capsula-comentarios__autor">
+                    👤 {{ nombreUsuario(c.idUsuario) }}
+                  </span>
+                  <div style="display:flex; align-items:center; gap:8px">
+                    <span class="capsula-comentarios__fecha">
+                      {{ formatFecha(c.fechaComentario) }}
+                    </span>
+                    <button
+                      v-if="c.idUsuario === authStore.usuario?.idUsuario || authStore.isAdmin"
+                      class="capsula-comentarios__delete"
+                      title="Eliminar comentario"
+                      @click="eliminarComentario(c.idComentario)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <p class="capsula-comentarios__texto">{{ c.texto }}</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
       </template>
     </main>
 
@@ -126,7 +201,11 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import BottomNav from '@/components/BottomNav.vue'
+import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
+import { useAuthStore } from '@/stores/auth'
+
+// ── Interfaces ────────────────────────────────────────────────────────────────
 
 interface Capsula {
   idCapsula: number
@@ -165,16 +244,39 @@ interface Usuario {
   email: string
 }
 
+interface Comentario {
+  idComentario: number
+  texto: string
+  fechaComentario: string
+  idUsuario: number
+  idCapsula: number
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
+const { confirm } = useConfirm()
 
 const capsula = ref<Capsula | null>(null)
 const contenido = ref<Contenido[]>([])
 const participantes = ref<Participante[]>([])
+const comentarios = ref<Comentario[]>([])
+
 const loading = ref(true)
 const loadingContenido = ref(true)
+const loadingComentarios = ref(true)
 const error = ref('')
 const lightboxUrl = ref('')
+
+// mapa idUsuario → nombre, para mostrar en comentarios
+const mapaUsuarios = ref<Record<number, string>>({})
+
+const nuevoComentario = ref('')
+const enviandoComentario = ref(false)
+
+// ── Computed ──────────────────────────────────────────────────────────────────
 
 const emoji = computed(() => {
   try {
@@ -186,12 +288,31 @@ const emoji = computed(() => {
   }
 })
 
+const esParticipante = computed(() =>
+  participantes.value.some(p => p.idUsuario === authStore.usuario?.idUsuario)
+)
+
+// Regla de acceso a comentarios:
+// - Admin: siempre puede
+// - Cápsula pública: cualquier usuario logueado puede
+// - Cápsula privada: solo participantes
+const puedeComentarr = computed(() => {
+  if (!capsula.value) return false
+  if (authStore.isAdmin) return true
+  if (capsula.value.visibilidad === 'publica') return true
+  if (capsula.value.visibilidad === 'privada') return esParticipante.value
+  return false
+})
+
+// ── Montaje ───────────────────────────────────────────────────────────────────
+
 onMounted(async () => {
   const id = Number(route.params.id)
 
   try {
     const data = await api.get<Capsula>(`/Capsula/${id}`)
 
+    // Si la cápsula no está abierta aún, redirigir
     if (new Date(data.fechaApertura) > new Date()) {
       router.replace('/tus-capsulas')
       return
@@ -199,22 +320,51 @@ onMounted(async () => {
 
     capsula.value = data
 
-    const [contenidoData, ucData] = await Promise.all([
+    // Cargamos contenido, participantes y comentarios en paralelo
+    const [contenidoData, ucData, comentariosData] = await Promise.all([
       api.get<Contenido[]>(`/Contenido/capsula/${id}`),
-      api.get<UsuarioCapsula[]>(`/UsuarioCapsula/capsula/${id}`)
+      api.get<UsuarioCapsula[]>(`/UsuarioCapsula/capsula/${id}`),
+      api.get<Comentario[]>(`/Comentario/capsula/${id}`)
     ])
 
     contenido.value = contenidoData
     loadingContenido.value = false
+    comentarios.value = comentariosData
+    loadingComentarios.value = false
 
-    const usuarios = await Promise.all(
+    // Cargar nombres de participantes
+    const usuariosParticipantes = await Promise.all(
       ucData.map(uc => api.get<Usuario>(`/Usuario/${uc.idUsuario}`))
     )
+
     participantes.value = ucData.map((uc, i) => ({
       idUsuario: uc.idUsuario,
-      nombre: usuarios[i].nombre,
+      nombre: usuariosParticipantes[i].nombre,
       rol: uc.rol
     }))
+
+    // Poblar el mapa de usuarios con los participantes ya cargados
+    usuariosParticipantes.forEach(u => {
+      mapaUsuarios.value[u.idUsuario] = u.nombre
+    })
+
+    // Cargar nombres de usuarios que comentaron pero no son participantes
+    const idsEnComentarios = [...new Set(comentariosData.map(c => c.idUsuario))]
+    const idsFaltantes = idsEnComentarios.filter(uid => !mapaUsuarios.value[uid])
+
+    if (idsFaltantes.length > 0) {
+      const extras = await Promise.all(
+        idsFaltantes.map(uid => api.get<Usuario>(`/Usuario/${uid}`))
+      )
+      extras.forEach(u => {
+        mapaUsuarios.value[u.idUsuario] = u.nombre
+      })
+    }
+
+    // Asegurarnos de tener al usuario actual en el mapa
+    if (authStore.usuario && !mapaUsuarios.value[authStore.usuario.idUsuario]) {
+      mapaUsuarios.value[authStore.usuario.idUsuario] = authStore.usuario.nombre
+    }
 
   } catch {
     error.value = 'No se pudo cargar la cápsula.'
@@ -222,6 +372,12 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function nombreUsuario(idUsuario: number): string {
+  return mapaUsuarios.value[idUsuario] ?? `Usuario #${idUsuario}`
+}
 
 function formatFecha(fecha: string): string {
   if (!fecha) return ''
@@ -244,6 +400,49 @@ function getDocIcon(url?: string): string {
 
 function abrirLightbox(url: string) {
   lightboxUrl.value = url
+}
+
+// ── Acciones comentarios ──────────────────────────────────────────────────────
+
+async function enviarComentario() {
+  if (!nuevoComentario.value.trim() || !authStore.usuario) return
+
+  enviandoComentario.value = true
+  try {
+    const nuevo = await api.post<Comentario>('/Comentario', {
+      texto: nuevoComentario.value.trim(),
+      fechaComentario: new Date().toISOString(),
+      idUsuario: authStore.usuario.idUsuario,
+      idCapsula: Number(route.params.id)
+    })
+
+    // Insertar al principio (más reciente primero)
+    comentarios.value.unshift(nuevo)
+    nuevoComentario.value = ''
+  } catch {
+    error.value = 'Error al enviar el comentario. Inténtalo de nuevo.'
+  } finally {
+    enviandoComentario.value = false
+  }
+}
+
+async function eliminarComentario(idComentario: number) {
+  const confirmado = await confirm({
+    title: 'Eliminar comentario',
+    message: '¿Seguro que quieres eliminar este comentario? Esta acción no se puede deshacer.',
+    confirmText: 'Eliminar',
+    cancelText: 'Cancelar',
+    danger: true
+  })
+
+  if (!confirmado) return
+
+  try {
+    await api.delete(`/Comentario/${idComentario}`)
+    comentarios.value = comentarios.value.filter(c => c.idComentario !== idComentario)
+  } catch {
+    // TODO: usar toast
+  }
 }
 </script>
 

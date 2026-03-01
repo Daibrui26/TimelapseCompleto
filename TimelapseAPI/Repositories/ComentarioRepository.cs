@@ -119,5 +119,33 @@ namespace TimelapseAPI.Repositories
 
             return await cmd.ExecuteNonQueryAsync() > 0;
         }
+
+        public async Task<List<Comentario>> GetByCapsulaAsync(int idCapsula)
+        {
+            var list = new List<Comentario>();
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string query = @"SELECT id_comentario, texto, fecha_comentario, id_usuario, id_capsula 
+                            FROM Comentario 
+                            WHERE id_capsula = @idCapsula 
+                            ORDER BY fecha_comentario DESC";
+         using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@idCapsula", idCapsula);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                list.Add(new Comentario
+                {
+                 IdComentario = reader.GetInt32(0),
+                 Texto = reader.GetString(1),
+                 FechaComentario = reader.GetDateTime(2),
+                 IdUsuario = reader.GetInt32(3),
+                 IdCapsula = reader.GetInt32(4)
+                });
+            }
+            return list;
+        }
     }
 }
