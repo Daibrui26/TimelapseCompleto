@@ -1,14 +1,14 @@
 CREATE DATABASE TimelapseDB;
-GO
+
 
 USE TimelapseDB;
-GO
+
 
 -- Verificar si existe la base de datos
 SELECT name, database_id, create_date
 FROM sys.databases 
 WHERE name = 'TimelapseDB';
-GO
+
 
 CREATE TABLE Usuario (
     Id_Usuario INT IDENTITY(1,1) PRIMARY KEY,
@@ -95,8 +95,8 @@ INSERT INTO Usuario (Nombre, Email, Contraseña, Rol) VALUES
 
 -- Tabla Capsula
 INSERT INTO Capsula (Titulo, Descripcion, Fecha_Creacion, Fecha_Apertura, Estado, Visibilidad) VALUES
-('Capsula del Tiempo 2023', 'Capsula con recuerdos del 2023', '2023-01-01', '2033-01-01', 'cerrada', 'privada'),
-('Capsula Escolar', 'Capsula con trabajos del colegio', '2022-09-01', '2025-09-01', 'cerrada', 'publica'),
+('Capsula del Tiempo 2023', 'Capsula con recuerdos del 2023', '2023-01-01', '2024-01-01', 'abierta', 'privada'),
+('Capsula Escolar', 'Capsula con trabajos del colegio', '2022-09-01', '2025-09-01', 'abierta', 'publica'),
 ('Capsula Familiar', 'Recuerdos familiares', '2021-05-10', '2031-05-10', 'cerrada', 'privada');
 
 -- Tabla Usuario_Capsula
@@ -110,12 +110,11 @@ INSERT INTO Usuario_Capsula (Id_Usuario, Id_Capsula, Rol) VALUES
 -- Tabla Contenido
 INSERT INTO Contenido (Tipo, Contenido, Fecha_Subida, url_archivo, public_id, Id_Capsula)
 VALUES
-('Texto', 'Introducción al tema de bases de datos relacionales.', '2026-02-20', NULL, NULL, 1),
-('Video', NULL, '2026-02-21', 'https://res.cloudinary.com/demo/video/upload/v1700000000/video1.mp4', 'video1_abc123', 1),
-('PDF', NULL, '2026-02-21', 'https://res.cloudinary.com/demo/raw/upload/v1700000001/documento1.pdf', 'doc1_xyz456', 2),
-('Imagen', NULL, '2026-02-22', 'https://res.cloudinary.com/demo/image/upload/v1700000002/imagen1.jpg', 'img1_def789', 2),
+('Imagen', NULL, '2026-02-21', 'https://res.cloudinary.com/dg5m7m0pe/image/upload/v1772397277/timelapse/imagenes/ptbmuuekvwdh0f9khxmn.jpg', NULL, 1),
+('Imagen', NULL, '2026-02-21', 'https://res.cloudinary.com/dg5m7m0pe/image/upload/v1772397385/timelapse/imagenes/ytxosyuqa84mkkggsf9s.webp', NULL, 2),
+('Imagen', NULL, '2026-02-22', 'https://res.cloudinary.com/dg5m7m0pe/image/upload/v1772397277/timelapse/imagenes/ptbmuuekvwdh0f9khxmn.jpg', NULL, 2),
 ('Texto', 'Ejemplo práctico paso a paso del ejercicio propuesto.', '2026-02-23', NULL, NULL, 3),
-('Video', NULL, '2026-02-24', 'https://res.cloudinary.com/demo/video/upload/v1700000003/tutorial.mp4', 'video2_ghi101', 3);
+('Video', NULL, '2026-02-24', 'https://res.cloudinary.com/dg5m7m0pe/image/upload/v1772397567/timelapse/imagenes/nsk4fmzokeocy3hecmyw.gif', NULL, 3);
 -- Tabla Comentario
 INSERT INTO Comentario (Texto, Fecha_Comentario, Id_Usuario, Id_Capsula) VALUES
 ('Qué recuerdos tan bonitos!', '2023-01-02', 2, 1),

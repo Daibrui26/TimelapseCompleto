@@ -15,117 +15,167 @@
           <div class="perfil-user__avatar">
             <img src="@/assets/img/Perfil.png" alt="Usuario" class="perfil-user__img" />
           </div>
-          <h2 class="perfil-user__name">{{ perfil.nombre || 'Usuario' }}</h2>
-          <p class="perfil-user__email">{{ perfil.email || 'correousuario@gmail.com' }}</p>
+          <h2 class="perfil-user__name">{{ authStore.usuario?.nombre }}</h2>
+          <p class="perfil-user__email">{{ authStore.usuario?.email }}</p>
         </div>
 
-        <div class="perfil-form">
+        <form class="perfil-form" @submit.prevent="toggleEdit">
           <div class="perfil-form__group">
             <label class="perfil-form__label">Nombre</label>
-            <input v-model="perfil.nombre" type="text" class="perfil-form__input" :disabled="!isEditing" />
-          </div>
-          <div class="perfil-form__group">
-            <label class="perfil-form__label">Correo</label>
-            <input v-model="perfil.email" type="email" class="perfil-form__input" :disabled="!isEditing" />
-          </div>
-          <div class="perfil-form__group">
-            <label class="perfil-form__label">Contraseña</label>
-            <input v-model="perfil.password" type="password" class="perfil-form__input" :disabled="!isEditing" />
-          </div>
-          <div v-if="isEditing" class="perfil-form__group">
-            <label class="perfil-form__label">Repetir Contraseña</label>
             <input
-              v-model="perfil.confirmPassword"
-              type="password"
+              v-bind="nombreAttrs"
+              v-model="nombre"
+              type="text"
               class="perfil-form__input"
-              placeholder="Repite la nueva contraseña"
+              :class="{ 'form__input--error': errors.nombre }"
+              :disabled="!isEditing"
             />
-          </div>
-          <div class="perfil-form__group">
-            <label class="perfil-form__label">Fecha Nac.</label>
-            <input v-model="perfil.fechaNac" type="date" class="perfil-form__input" :disabled="!isEditing" />
+            <span v-if="errors.nombre && isEditing" class="form__error-msg">{{ errors.nombre }}</span>
           </div>
 
-          <!-- Error inline (reemplaza el alert de contraseñas) -->
-          <p v-if="errorMsg" style="color:#C85C5C; font-size:14px; text-align:center; margin-top:4px;">
-            {{ errorMsg }}
-          </p>
-        </div>
+          <div class="perfil-form__group">
+            <label class="perfil-form__label">Correo</label>
+            <input
+              v-bind="emailAttrs"
+              v-model="email"
+              type="email"
+              class="perfil-form__input"
+              :class="{ 'form__input--error': errors.email }"
+              :disabled="!isEditing"
+            />
+            <span v-if="errors.email && isEditing" class="form__error-msg">{{ errors.email }}</span>
+          </div>
+
+          <div class="perfil-form__group">
+            <label class="perfil-form__label">Contraseña</label>
+            <input
+              v-bind="passwordAttrs"
+              v-model="password"
+              type="password"
+              class="perfil-form__input"
+              :class="{ 'form__input--error': errors.password }"
+              :disabled="!isEditing"
+              placeholder="Dejar vacío para no cambiar"
+            />
+            <span v-if="errors.password && isEditing" class="form__error-msg">{{ errors.password }}</span>
+          </div>
+
+          <div class="perfil-form__group" v-if="isEditing">
+            <label class="perfil-form__label">Repetir contraseña</label>
+            <input
+              v-bind="confirmPasswordAttrs"
+              v-model="confirmPassword"
+              type="password"
+              class="perfil-form__input"
+              :class="{ 'form__input--error': errors.confirmPassword }"
+              placeholder="Repite la nueva contraseña"
+            />
+            <span v-if="errors.confirmPassword" class="form__error-msg">{{ errors.confirmPassword }}</span>
+          </div>
+        </form>
+
+        <span v-if="errorServidor" class="form__error-msg form__error-msg--center" style="margin-top:12px">
+          {{ errorServidor }}
+        </span>
+
       </section>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
 import AppHeader from '@/components/AppHeader.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useToast } from '@/composables/useToast'
 import { api } from '@/services/api'
 
 const authStore = useAuthStore()
-const toast     = useToast()
 const isEditing = ref(false)
-const errorMsg  = ref('')
+const errorServidor = ref('')
 
-const perfil = reactive({
-  nombre:          '',
-  email:           '',
-  password:        '',
-  confirmPassword: '',
-  fechaNac:        ''
+// ── Schema ────────────────────────────────────────────────────────────────────
+const schema = yup.object({
+  nombre: yup
+    .string()
+    .required('El nombre es obligatorio')
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(100, 'El nombre no puede superar los 100 caracteres'),
+  email: yup
+    .string()
+    .required('El correo es obligatorio')
+    .email('Introduce un correo válido'),
+  password: yup
+    .string()
+    .test('min-si-relleno', 'La contraseña debe tener al menos 8 caracteres', value => {
+      if (!value) return true // vacío = no cambiar, válido
+      return value.length >= 8
+    }),
+  confirmPassword: yup
+    .string()
+    .test('coincide', 'Las contraseñas no coinciden', function (value) {
+      const { password } = this.parent
+      if (!password) return true // si no hay contraseña nueva, no validar
+      return value === password
+    })
 })
+
+// ── Form ──────────────────────────────────────────────────────────────────────
+const { errors, handleSubmit, defineField, setValues } = useForm({ validationSchema: schema })
+
+const [nombre, nombreAttrs]                   = defineField('nombre')
+const [email, emailAttrs]                     = defineField('email')
+const [password, passwordAttrs]               = defineField('password')
+const [confirmPassword, confirmPasswordAttrs] = defineField('confirmPassword')
 
 onMounted(() => {
-  perfil.nombre = authStore.usuario?.nombre ?? ''
-  perfil.email  = authStore.usuario?.email  ?? ''
+  setValues({
+    nombre: authStore.usuario?.nombre ?? '',
+    email: authStore.usuario?.email ?? '',
+    password: '',
+    confirmPassword: ''
+  })
 })
 
-async function toggleEdit() {
-  // Activar modo edición
+// ── Toggle edición / guardar ──────────────────────────────────────────────────
+const toggleEdit = handleSubmit(async (values) => {
+  // Si no estamos editando, activar modo edición
   if (!isEditing.value) {
     isEditing.value = true
-    errorMsg.value  = ''
     return
   }
 
-  // Validación inline — sin alert
-  if (perfil.password && perfil.password !== perfil.confirmPassword) {
-    errorMsg.value = 'Las contraseñas no coinciden.'
-    return
-  }
-
-  errorMsg.value = ''
+  // Si estamos editando, guardar
+  errorServidor.value = ''
 
   try {
-    let contraseñaFinal = perfil.password
+    let contraseñaFinal = values.password
     if (!contraseñaFinal) {
       const usuarioActual = await api.get<{ contraseña: string }>(`/Usuario/${authStore.usuario?.idUsuario}`)
       contraseñaFinal = usuarioActual.contraseña
     }
 
     await api.put(`/Usuario/${authStore.usuario?.idUsuario}`, {
-      idUsuario:  authStore.usuario?.idUsuario,
-      nombre:     perfil.nombre,
-      email:      perfil.email,
-      contraseña: contraseñaFinal
+      idUsuario: authStore.usuario?.idUsuario,
+      nombre: values.nombre,
+      email: values.email,
+      contraseña: contraseñaFinal,
+      rol: authStore.usuario?.rol
     })
 
     authStore.setUsuario({
       idUsuario: authStore.usuario!.idUsuario,
-      nombre:    perfil.nombre,
-      email:     perfil.email,
-      rol:       authStore.usuario!.rol
+      nombre: values.nombre!,
+      email: values.email!,
+      rol: authStore.usuario!.rol
     })
 
-    perfil.password        = ''
-    perfil.confirmPassword = ''
-    isEditing.value        = false
-
-    // Toast de éxito en lugar de alert
-    toast.success('Perfil actualizado correctamente.')
+    // Limpiar contraseña tras guardar
+    setValues({ ...values, password: '', confirmPassword: '' })
+    isEditing.value = false
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : 'Error al guardar los cambios.')
+    errorServidor.value = err instanceof Error ? err.message : 'Error al guardar los cambios.'
   }
-}
+})
 </script>

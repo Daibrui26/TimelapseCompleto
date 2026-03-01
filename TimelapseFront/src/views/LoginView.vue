@@ -10,16 +10,40 @@
         <form class="form form--login" @submit.prevent="handleLogin">
           <div class="form__group">
             <label for="email" class="form__label">Correo electrónico</label>
-            <input v-model="form.email" type="email" id="email" class="form__input" placeholder="tu@email.com" required />
+            <input
+              v-bind="emailAttrs"
+              v-model="email"
+              type="email"
+              id="email"
+              class="form__input"
+              :class="{ 'form__input--error': errors.email }"
+              placeholder="tu@email.com"
+            />
+            <span v-if="errors.email" class="form__error-msg">{{ errors.email }}</span>
           </div>
+
           <div class="form__group">
             <label for="password" class="form__label">Contraseña</label>
-            <input v-model="form.password" type="password" id="password" class="form__input" placeholder="••••••••" required />
+            <input
+              v-bind="passwordAttrs"
+              v-model="password"
+              type="password"
+              id="password"
+              class="form__input"
+              :class="{ 'form__input--error': errors.password }"
+              placeholder="••••••••"
+            />
+            <span v-if="errors.password" class="form__error-msg">{{ errors.password }}</span>
           </div>
+
           <a href="#" class="login__forgot">¿Olvidaste tu contraseña?</a>
-          <p v-if="error" class="form__error">{{ error }}</p>
+
+          <span v-if="errorServidor" class="form__error-msg form__error-msg--center">
+            {{ errorServidor }}
+          </span>
+
           <button type="submit" class="btn btn--submit btn--login" :disabled="loading">
-           {{ loading ? 'Entrando...' : 'Iniciar sesión' }}
+            {{ loading ? 'Entrando...' : 'Iniciar sesión' }}
           </button>
         </form>
 
@@ -39,8 +63,10 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -48,19 +74,36 @@ import { authService } from '@/services/authservice'
 
 const router = useRouter()
 const authStore = useAuthStore()
-
-const form = reactive({ email: '', password: '' })
-const error = ref('')
 const loading = ref(false)
+const errorServidor = ref('')
 
-async function handleLogin() {
-  error.value = ''
+// ── Schema ────────────────────────────────────────────────────────────────────
+const schema = yup.object({
+  email: yup
+    .string()
+    .required('El correo es obligatorio')
+    .email('Introduce un correo válido'),
+  password: yup
+    .string()
+    .required('La contraseña es obligatoria')
+    .min(6, 'La contraseña debe tener al menos 6 caracteres')
+})
+
+// ── Form ──────────────────────────────────────────────────────────────────────
+const { errors, handleSubmit, defineField } = useForm({ validationSchema: schema })
+
+const [email, emailAttrs] = defineField('email')
+const [password, passwordAttrs] = defineField('password')
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+const handleLogin = handleSubmit(async (values) => {
+  errorServidor.value = ''
   loading.value = true
 
   try {
     const response = await authService.login({
-      email: form.email,
-      contraseña: form.password   // tu form usa "password", la API espera "contraseña"
+      email: values.email,
+      contraseña: values.password
     })
 
     authStore.setUsuario({
@@ -72,9 +115,9 @@ async function handleLogin() {
 
     router.push('/home')
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Email o contraseña incorrectos'
+    errorServidor.value = err instanceof Error ? err.message : 'Email o contraseña incorrectos'
   } finally {
     loading.value = false
   }
-}
+})
 </script>

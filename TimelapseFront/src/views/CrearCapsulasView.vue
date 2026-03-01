@@ -19,18 +19,18 @@
               <span class="emoji-selector__label">Elige un icono para tu cápsula</span>
               <div class="emoji-selector__grid">
                 <button
-                  v-for="emoji in EMOJIS"
-                  :key="emoji"
+                  v-for="emojiOption in EMOJIS"
+                  :key="emojiOption"
                   type="button"
                   class="emoji-selector__option"
-                  :class="{ 'emoji-selector__option--selected': form.emoji === emoji }"
-                  @click="form.emoji = emoji"
+                  :class="{ 'emoji-selector__option--selected': emojiSeleccionado === emojiOption }"
+                  @click="emojiSeleccionado = emojiOption"
                 >
-                  {{ emoji }}
+                  {{ emojiOption }}
                 </button>
               </div>
               <div class="emoji-selector__preview">
-                <span>{{ form.emoji }}</span>
+                <span>{{ emojiSeleccionado }}</span>
                 <span>Icono seleccionado</span>
               </div>
             </div>
@@ -40,37 +40,44 @@
           <div class="form__group">
             <label for="titulo" class="form__label">Título de la cápsula</label>
             <input
-              v-model="form.titulo"
+              v-bind="tituloAttrs"
+              v-model="titulo"
               type="text"
               id="titulo"
               class="form__input"
+              :class="{ 'form__input--error': errors.titulo }"
               placeholder="Ej: Verano 2025"
-              required
             />
+            <span v-if="errors.titulo" class="form__error-msg">{{ errors.titulo }}</span>
           </div>
 
           <!-- Descripción -->
           <div class="form__group">
             <label for="descripcion" class="form__label">Descripción</label>
             <textarea
-              v-model="form.descripcion"
+              v-bind="descripcionAttrs"
+              v-model="descripcion"
               id="descripcion"
               class="form__textarea"
+              :class="{ 'form__input--error': errors.descripcion }"
               placeholder="Describe qué hay en esta cápsula..."
             ></textarea>
+            <span v-if="errors.descripcion" class="form__error-msg">{{ errors.descripcion }}</span>
           </div>
 
           <!-- Fecha de apertura -->
           <div class="form__group">
             <label for="fechaApertura" class="form__label">Fecha de apertura</label>
             <input
-              v-model="form.fechaApertura"
+              v-bind="fechaAperturaAttrs"
+              v-model="fechaApertura"
               type="date"
               id="fechaApertura"
               class="form__input"
+              :class="{ 'form__input--error': errors.fechaApertura }"
               :min="minDate"
-              required
             />
+            <span v-if="errors.fechaApertura" class="form__error-msg">{{ errors.fechaApertura }}</span>
           </div>
 
           <!-- Visibilidad -->
@@ -80,8 +87,8 @@
               <button
                 type="button"
                 class="visibility-selector__option"
-                :class="{ 'visibility-selector__option--selected': form.visibilidad === 'privada' }"
-                @click="form.visibilidad = 'privada'"
+                :class="{ 'visibility-selector__option--selected': visibilidad === 'privada' }"
+                @click="visibilidad = 'privada'"
               >
                 <span class="visibility-selector__option-icon">🔒</span>
                 Privada
@@ -89,8 +96,8 @@
               <button
                 type="button"
                 class="visibility-selector__option"
-                :class="{ 'visibility-selector__option--selected': form.visibilidad === 'publica' }"
-                @click="form.visibilidad = 'publica'"
+                :class="{ 'visibility-selector__option--selected': visibilidad === 'publica' }"
+                @click="visibilidad = 'publica'"
               >
                 <span class="visibility-selector__option-icon">🌍</span>
                 Pública
@@ -114,7 +121,6 @@
                 <button type="button" class="participantes__btn-add" @click="añadirPorNombre">+</button>
               </div>
 
-              <!-- Sugerencias de búsqueda -->
               <div v-if="sugerencias.length > 0" class="participantes__list">
                 <button
                   v-for="u in sugerencias"
@@ -129,7 +135,6 @@
                 </button>
               </div>
 
-              <!-- Participantes añadidos -->
               <div v-if="participantesSeleccionados.length > 0" class="participantes__list">
                 <span
                   v-for="p in participantesSeleccionados"
@@ -170,7 +175,6 @@
               />
             </div>
 
-            <!-- Lista de archivos seleccionados -->
             <div v-if="archivos.length > 0" class="file-list">
               <div v-for="(file, index) in archivos" :key="index" class="file-list__item">
                 <span class="file-list__icon">{{ getFileIcon(file) }}</span>
@@ -182,12 +186,10 @@
 
           <hr class="form__separator" />
 
-          <!-- Mensaje de error -->
-          <p v-if="errorMsg" style="color: #C85C5C; font-size: 14px; text-align:center;">
-            {{ errorMsg }}
-          </p>
+          <span v-if="errorServidor" class="form__error-msg form__error-msg--center">
+            {{ errorServidor }}
+          </span>
 
-          <!-- Acciones -->
           <div class="crear-capsula-actions">
             <button type="submit" class="btn btn--submit" :disabled="loading">
               {{ loading ? 'Sellando...' : '🔒 Sellar Cápsula' }}
@@ -202,8 +204,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
 import AppHeader from '@/components/AppHeader.vue'
 import { api } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
@@ -220,18 +224,13 @@ interface CapsulaCreada {
 
 const router = useRouter()
 const authStore = useAuthStore()
+const loading = ref(false)
+const errorServidor = ref('')
 
-// ── Emojis disponibles ────────────────────────────────────────────────────────
+// ── Emojis ────────────────────────────────────────────────────────────────────
 const EMOJIS = ['⏳', '📦', '🌟', '💌', '🎁', '🏖️', '🎓', '❤️', '🌍', '📷', '🎵', '🏡']
-
-// ── Estado del formulario ─────────────────────────────────────────────────────
-const form = reactive({
-  titulo: '',
-  descripcion: '',
-  fechaApertura: '',
-  visibilidad: 'privada',
-  emoji: '⏳'
-})
+const emojiSeleccionado = ref('⏳')
+const visibilidad = ref('privada')
 
 const minDate = computed(() => {
   const d = new Date()
@@ -239,41 +238,56 @@ const minDate = computed(() => {
   return d.toISOString().split('T')[0]
 })
 
+// ── Schema ────────────────────────────────────────────────────────────────────
+const schema = yup.object({
+  titulo: yup
+    .string()
+    .required('El título es obligatorio')
+    .min(3, 'El título debe tener al menos 3 caracteres')
+    .max(150, 'El título no puede superar los 150 caracteres'),
+  descripcion: yup
+    .string()
+    .max(500, 'La descripción no puede superar los 500 caracteres'),
+  fechaApertura: yup
+    .string()
+    .required('La fecha de apertura es obligatoria')
+    .test('futura', 'La fecha de apertura debe ser posterior a hoy', value => {
+      if (!value) return false
+      return new Date(value) > new Date()
+    })
+})
+
+// ── Form ──────────────────────────────────────────────────────────────────────
+const { errors, handleSubmit: veeHandleSubmit, defineField } = useForm({ validationSchema: schema })
+
+const [titulo, tituloAttrs]             = defineField('titulo')
+const [descripcion, descripcionAttrs]   = defineField('descripcion')
+const [fechaApertura, fechaAperturaAttrs] = defineField('fechaApertura')
+
 // ── Archivos ──────────────────────────────────────────────────────────────────
 const archivos = ref<File[]>([])
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const isDragging = ref(false)
 
-function triggerFileInput() {
-  fileInputRef.value?.click()
-}
-
+function triggerFileInput() { fileInputRef.value?.click() }
 function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   if (input.files) addFiles(Array.from(input.files))
 }
-
 function onDrop(e: DragEvent) {
   isDragging.value = false
   if (e.dataTransfer?.files) addFiles(Array.from(e.dataTransfer.files))
 }
-
 function addFiles(nuevos: File[]) {
-  const todos = [...archivos.value, ...nuevos]
-  archivos.value = todos.slice(0, 10)
+  archivos.value = [...archivos.value, ...nuevos].slice(0, 10)
 }
-
-function quitarArchivo(index: number) {
-  archivos.value.splice(index, 1)
-}
-
+function quitarArchivo(index: number) { archivos.value.splice(index, 1) }
 function getFileIcon(file: File): string {
   if (file.type.startsWith('image/')) return '🖼️'
   if (file.type.startsWith('video/')) return '🎥'
   if (file.type.includes('pdf')) return '📄'
   return '📎'
 }
-
 function getTipo(file: File): string {
   if (file.type.startsWith('image/')) return 'imagen'
   if (file.type.startsWith('video/')) return 'video'
@@ -294,7 +308,6 @@ async function buscarUsuarios() {
   busquedaTimeout = setTimeout(async () => {
     try {
       const resultados = await api.get<Usuario[]>(`/Usuario/search?nombre=${encodeURIComponent(q)}`)
-      // Filtrar los ya añadidos y el propio usuario
       sugerencias.value = resultados.filter(
         u => u.idUsuario !== authStore.usuario?.idUsuario &&
              !participantesSeleccionados.value.some(p => p.idUsuario === u.idUsuario)
@@ -314,59 +327,46 @@ function seleccionarUsuario(u: Usuario) {
 }
 
 function añadirPorNombre() {
-  if (sugerencias.value.length > 0) {
-    seleccionarUsuario(sugerencias.value[0])
-  }
+  if (sugerencias.value.length > 0) seleccionarUsuario(sugerencias.value[0])
 }
 
 function quitarParticipante(id: number) {
   participantesSeleccionados.value = participantesSeleccionados.value.filter(p => p.idUsuario !== id)
 }
 
-// ── Envío ─────────────────────────────────────────────────────────────────────
-const loading = ref(false)
-const errorMsg = ref('')
-
-async function handleSubmit() {
-  errorMsg.value = ''
+// ── Submit ────────────────────────────────────────────────────────────────────
+const handleSubmit = veeHandleSubmit(async (values) => {
+  errorServidor.value = ''
   loading.value = true
 
   try {
     const hoy = new Date().toISOString()
 
-    // 1. Crear la cápsula
     const nuevaCapsula = await api.post<CapsulaCreada>('/Capsula', {
-      titulo: form.titulo,
-      descripcion: form.descripcion,
+      titulo: values.titulo,
+      descripcion: values.descripcion ?? '',
       fechaCreacion: hoy,
-      fechaApertura: new Date(form.fechaApertura).toISOString(),
+      fechaApertura: new Date(values.fechaApertura).toISOString(),
       estado: 'cerrada',
-      visibilidad: form.visibilidad
+      visibilidad: visibilidad.value
     })
 
     const idCapsula = nuevaCapsula.idCapsula
 
-    // 2. Asociar el creador a la cápsula (rol: creador)
     await api.post('/UsuarioCapsula', {
       idUsuario: authStore.usuario!.idUsuario,
       idCapsula,
       rol: 'creador'
     })
 
-    // 3. Añadir participantes adicionales (rol: participante)
     if (participantesSeleccionados.value.length > 0) {
       await Promise.all(
         participantesSeleccionados.value.map(u =>
-          api.post('/UsuarioCapsula', {
-            idUsuario: u.idUsuario,
-            idCapsula,
-            rol: 'participante'
-          })
+          api.post('/UsuarioCapsula', { idUsuario: u.idUsuario, idCapsula, rol: 'participante' })
         )
       )
     }
 
-    // 4. Subir archivos
     if (archivos.value.length > 0) {
       await Promise.all(
         archivos.value.map(file => {
@@ -374,24 +374,20 @@ async function handleSubmit() {
           formData.append('IdCapsula', String(idCapsula))
           formData.append('Tipo', getTipo(file))
           formData.append('Archivo', file)
-          return fetch('/api/Contenido/archivo', {
-            method: 'POST',
-            body: formData
-          })
+          return fetch('/api/Contenido/archivo', { method: 'POST', body: formData })
         })
       )
     }
 
-    // 5. Guardar emoji en localStorage
     const emojisGuardados = JSON.parse(localStorage.getItem('capsula_emojis') || '{}')
-    emojisGuardados[idCapsula] = form.emoji
+    emojisGuardados[idCapsula] = emojiSeleccionado.value
     localStorage.setItem('capsula_emojis', JSON.stringify(emojisGuardados))
 
     router.push('/tus-capsulas')
   } catch (e: any) {
-    errorMsg.value = e?.message || 'Ha ocurrido un error. Inténtalo de nuevo.'
+    errorServidor.value = e?.message || 'Ha ocurrido un error. Inténtalo de nuevo.'
   } finally {
     loading.value = false
   }
-}
+})
 </script>
