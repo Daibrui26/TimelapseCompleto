@@ -13,5 +13,6 @@ namespace TimelapseAPI.Services
         Task<Comentario> CreateAsync(Comentario comentario);
         Task<Comentario?> UpdateAsync(Comentario comentario);
         Task<bool> DeleteAsync(int id);
+        Task<List<Comentario>> GetByCapsulaAsync(int idCapsula);
     }
 }

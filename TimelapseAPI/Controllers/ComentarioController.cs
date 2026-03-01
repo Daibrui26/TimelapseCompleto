@@ -80,5 +80,12 @@ namespace TimelapseAPI.Controllers
             if (!result) return NotFound(new { mensaje = "No se encontró el comentario con ese ID." });
             return NoContent();
         }
+
+        [HttpGet("capsula/{idCapsula}")]
+        public async Task<ActionResult<List<Comentario>>> GetByCapsula(int idCapsula)
+        {
+            var comentarios = await _comentarioService.GetByCapsulaAsync(idCapsula);
+            return Ok(comentarios);
+        }
     }
 }

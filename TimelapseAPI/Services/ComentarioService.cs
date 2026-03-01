@@ -65,5 +65,10 @@ namespace TimelapseAPI.Services
         {
             return await _comentarioRepository.DeleteAsync(id);
         }
+
+        public async Task<List<Comentario>> GetByCapsulaAsync(int idCapsula)
+        {
+            return await _comentarioRepository.GetByCapsulaAsync(idCapsula);
+        }
     }
 }

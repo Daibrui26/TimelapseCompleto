@@ -11,6 +11,16 @@
         <p class="capsula-item__date">{{ fechaFormateada }}</p>
       </div>
       <span v-if="bloqueada" class="capsula-item__lock">🔒</span>
+
+      <!-- Botón eliminar integrado, se mueve con la card -->
+      <button
+        v-if="deletable"
+        class="capsula-item__delete-btn"
+        title="Eliminar cápsula"
+        @click.stop="emit('delete')"
+      >
+        ❌
+      </button>
     </div>
 
     <!-- Mensaje de bloqueada -->
@@ -32,24 +42,28 @@ interface Props {
   date: string
   to?: string
   emoji?: string
+  deletable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   to: '#',
-  emoji: '⏳'
+  emoji: '⏳',
+  deletable: false
 })
+
+const emit = defineEmits<{
+  delete: []
+}>()
 
 const router = useRouter()
 const shaking = ref(false)
 const mostrarMensaje = ref(false)
 
-// ── ¿Está bloqueada? ──────────────────────────────────────────────────────────
 const bloqueada = computed(() => {
   if (!props.date) return false
   return new Date(props.date) > new Date()
 })
 
-// ── Fechas formateadas ────────────────────────────────────────────────────────
 const fechaFormateada = computed(() => {
   if (!props.date) return ''
   return new Date(props.date).toLocaleDateString('es-ES', {
@@ -68,7 +82,6 @@ const fechaAperturaFormateada = computed(() => {
   })
 })
 
-// ── Tiempo restante ───────────────────────────────────────────────────────────
 const tiempoRestante = computed(() => {
   if (!props.date) return ''
   const diff = new Date(props.date).getTime() - Date.now()
@@ -92,7 +105,6 @@ const tiempoRestante = computed(() => {
   return `${dias} día${dias !== 1 ? 's' : ''}`
 })
 
-// ── Click handler ─────────────────────────────────────────────────────────────
 function handleClick() {
   if (!bloqueada.value) {
     router.push(props.to)
@@ -106,3 +118,21 @@ function handleClick() {
   setTimeout(() => { mostrarMensaje.value = false }, 4000)
 }
 </script>
+
+<style scoped>
+.capsula-item__delete-btn {
+  background: none;
+  border: none;
+  font-size: 40px;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.2s;
+  line-height: 1;
+  padding: 4px 4px 4px 8px;
+  flex-shrink: 0;
+}
+
+.capsula-item__delete-btn:hover {
+  opacity: 1;
+}
+</style>
