@@ -6,7 +6,7 @@ docker compose down
 
 USUARIO DE PRUEBA:
 
-ana.perez@gmail.com
+ana.perez@email.com
 contraseña123
 
 Puerto de la web: http://localhost:5173/
@@ -18,6 +18,7 @@ esto:
 
 -----------------------------------------------------------------
 CREATE DATABASE TimelapseDB;
+-----------------------------------------------------------------
 
 CREATE TABLE Usuario (
     Id_Usuario INT IDENTITY(1,1) PRIMARY KEY,
