@@ -63,6 +63,12 @@ const router = createRouter({
       component: () => import('@/views/CapsulaDetalleView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/explorar',
+      name: 'Explorar',
+      component: () => import('@/views/ExplorarView.vue'),
+      meta: { requiresAuth: true }
+    },
     // ── Admin ─────────────────────────────────────────────────────────────────
     {
       path: '/admin',

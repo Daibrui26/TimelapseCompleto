@@ -1,0 +1,543 @@
+// ── Página Explorar ───────────────────────────────────────────────────────────
+.page__main--explorar {
+  max-width: 650px !important;
+  gap: $spacing-lg;
+}
+
+// ── Formulario nuevo post ─────────────────────────────────────────────────────
+.post-composer {
+  background: $color-background;
+  border-radius: $border-radius-xl;
+  padding: $spacing-xl;
+  box-shadow: $shadow-md;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+  }
+
+  &__avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid $color-primary;
+    flex-shrink: 0;
+  }
+
+  &__textarea {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #D0D0D0;
+    border-radius: $border-radius-md;
+    font-size: 15px;
+    font-family: $font-family;
+    min-height: 90px;
+    resize: vertical;
+    transition: border-color 0.3s;
+    width: 100%;
+
+    &:focus {
+      outline: none;
+      border-color: $color-secondary;
+    }
+
+    &::placeholder {
+      color: #aaa;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+  }
+
+  &__actions-left {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  &__file-btn {
+    background: lighten($color-accent, 6%);
+    border: none;
+    border-radius: $border-radius-sm;
+    padding: 8px 14px;
+    font-size: 14px;
+    color: $color-primary;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+
+    &:hover {
+      background: $color-accent;
+    }
+  }
+
+  &__file-input {
+    display: none;
+  }
+
+  &__file-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: $font-size-small;
+    color: $color-dark;
+    background: lighten($color-accent, 8%);
+    border-radius: $border-radius-sm;
+    padding: 6px 12px;
+  }
+
+  &__file-remove {
+    background: none;
+    border: none;
+    color: $color-danger;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 2px;
+    line-height: 1;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+
+  &__visibility {
+    display: flex;
+    gap: 6px;
+  }
+
+  &__vis-btn {
+    border: 2px solid #D0D0D0;
+    border-radius: $border-radius-sm;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-family: $font-family;
+    background: #fff;
+    color: $color-dark;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+
+    &:hover {
+      border-color: $color-secondary;
+      background: lighten($color-accent, 6%);
+    }
+
+    &--active {
+      border-color: $color-primary;
+      background: $color-accent;
+      color: $color-primary;
+      font-weight: 600;
+    }
+  }
+
+  &__submit {
+    background: $color-primary;
+    color: #fff;
+    border: none;
+    border-radius: $border-radius-md;
+    padding: 10px 26px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) {
+      background: darken($color-primary, 10%);
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ── Feed ──────────────────────────────────────────────────────────────────────
+.post-feed {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+// ── Post card ─────────────────────────────────────────────────────────────────
+.post-card {
+  background: $color-background;
+  border-radius: $border-radius-xl;
+  padding: $spacing-xl;
+  box-shadow: $shadow-sm;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid $color-accent;
+    flex-shrink: 0;
+  }
+
+  &__user-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__username {
+    color: $color-primary;
+    font-weight: 700;
+    font-size: $font-size-small;
+  }
+
+  &__date {
+    color: #aaa;
+    font-size: 12px;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+
+    &--publica {
+      background: #d4edda;
+      color: #2d6a4f;
+    }
+
+    &--privada {
+      background: #f8d7da;
+      color: #842029;
+    }
+  }
+
+  &__delete {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.2s;
+    border-radius: $border-radius-sm;
+
+    &:hover {
+      color: $color-danger;
+    }
+  }
+
+  &__body {
+    color: $color-dark;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: $border-radius-md;
+    display: block;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.95;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding-top: $spacing-sm;
+    border-top: 1px solid #eee;
+  }
+
+  &__comments-toggle {
+    background: none;
+    border: none;
+    color: $color-secondary;
+    font-size: $font-size-small;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+}
+
+// ── Comentarios de un post ────────────────────────────────────────────────────
+.post-comments {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding-top: $spacing-sm;
+
+  &__form {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  &__input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 2px solid #D0D0D0;
+    border-radius: $border-radius-md;
+    font-size: 14px;
+    font-family: $font-family;
+    resize: none;
+    transition: border-color 0.3s;
+    min-height: 44px;
+
+    &:focus {
+      outline: none;
+      border-color: $color-secondary;
+    }
+
+    &::placeholder {
+      color: #aaa;
+    }
+  }
+
+  &__send {
+    background: $color-primary;
+    color: #fff;
+    border: none;
+    border-radius: $border-radius-md;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+
+    &:hover:not(:disabled) {
+      background: darken($color-primary, 10%);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__item {
+    background: lighten($color-accent, 8%);
+    border-radius: $border-radius-md;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__author {
+    color: $color-primary;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  &__comment-date {
+    color: #aaa;
+    font-size: 12px;
+  }
+
+  &__comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__comment-delete {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+    line-height: 1;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $color-danger;
+    }
+  }
+
+  &__text {
+    color: $color-dark;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  &__empty {
+    color: #aaa;
+    font-size: $font-size-small;
+    font-style: italic;
+    text-align: center;
+    padding: $spacing-sm 0;
+  }
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+.explorar-tabs {
+  display: flex;
+  gap: 4px;
+  background: $color-background;
+  border-radius: $border-radius-xl;
+  padding: 6px;
+  box-shadow: $shadow-sm;
+
+  &__btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: $border-radius-lg;
+    font-size: $font-size-small;
+    font-weight: 600;
+    font-family: $font-family;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: $color-dark;
+
+    &:hover {
+      background: lighten($color-accent, 6%);
+      color: $color-primary;
+    }
+
+    &--active {
+      background: $color-primary;
+      color: #fff;
+    }
+  }
+}
+
+// ── Estado vacío / carga ──────────────────────────────────────────────────────
+.post-feed__empty {
+  text-align: center;
+  color: #aaa;
+  font-size: $font-size-small;
+  padding: $spacing-xxl 0;
+  font-style: italic;
+}
+
+.post-feed__loading {
+  text-align: center;
+  color: $color-secondary;
+  font-size: $font-size-small;
+  padding: $spacing-xl 0;
+}
+
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+.post-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: zoom-out;
+
+  &__img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: $border-radius-md;
+    cursor: default;
+  }
+
+  &__close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 480px) {
+  .post-composer {
+    padding: $spacing-lg;
+
+    &__footer {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    &__submit {
+      width: 100%;
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 docker-compose up -d --build
 
-docker compose down
+docker-compose down
 
 USUARIO DE PRUEBA:
 
@@ -95,6 +95,29 @@ CREATE TABLE Amistad (
     CONSTRAINT FK_Amistad_Usuario1 FOREIGN KEY (Id_Usuario1) REFERENCES Usuario(Id_Usuario),
     CONSTRAINT FK_Amistad_Usuario2 FOREIGN KEY (Id_Usuario2) REFERENCES Usuario(Id_Usuario)
 );
+-- Tabla Post
+CREATE TABLE Post (
+    Id_Post INT IDENTITY(1,1) PRIMARY KEY,
+    Texto NVARCHAR(MAX) NOT NULL,
+    Url_Archivo NVARCHAR(500) NULL,
+    Public_Id NVARCHAR(200) NULL,
+    Fecha_Publicacion DATETIME NOT NULL DEFAULT GETDATE(),
+    Visibilidad NVARCHAR(20) NOT NULL DEFAULT 'publica',
+    Id_Usuario INT NOT NULL,
+    CONSTRAINT FK_Post_Usuario FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id_Usuario),
+    CONSTRAINT CHK_Post_Visibilidad CHECK (Visibilidad IN ('publica', 'privada'))
+);
+
+-- Tabla ComentarioPost
+CREATE TABLE ComentarioPost (
+    Id_ComentarioPost INT IDENTITY(1,1) PRIMARY KEY,
+    Texto NVARCHAR(MAX) NOT NULL,
+    Fecha_Comentario DATETIME NOT NULL DEFAULT GETDATE(),
+    Id_Usuario INT NOT NULL,
+    Id_Post INT NOT NULL,
+    CONSTRAINT FK_ComentarioPost_Usuario FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id_Usuario),
+    CONSTRAINT FK_ComentarioPost_Post FOREIGN KEY (Id_Post) REFERENCES Post(Id_Post)
+);
 
 -- Tabla Usuario
 INSERT INTO Usuario (Nombre, Email, Contraseña, Rol) VALUES
@@ -144,9 +167,20 @@ INSERT INTO Amistad (Id_Usuario1, Id_Usuario2, Estado) VALUES
 (2, 4, 'aceptada'),
 (3, 4, 'aceptada');
 
+-- Datos de prueba
+INSERT INTO Post (Texto, Fecha_Publicacion, Visibilidad, Id_Usuario) VALUES
+('Hoy aprendí que escribir un diario digital cambia tu perspectiva del tiempo. ¡Recomendado!', GETDATE(), 'publica', 1),
+('Primer día usando Timelapse. Qué buena idea lo de las cápsulas del tiempo 🕐', GETDATE(), 'publica', 2),
+('Reflexión del día: guarda más momentos, los necesitarás en el futuro.', GETDATE(), 'privada', 1);
+
+INSERT INTO ComentarioPost (Texto, Fecha_Comentario, Id_Usuario, Id_Post) VALUES
+('¡Totalmente de acuerdo! Yo llevo un año haciéndolo.', GETDATE(), 2, 1),
+('Qué bonito mensaje, gracias por compartirlo.', GETDATE(), 3, 1);
+
 -----------------------------------------------------------------
 DROPTABLES:
-
+DROP TABLE IF EXISTS ComentarioPost;
+DROP TABLE IF EXISTS Post;
 DROP TABLE IF EXISTS Amistad;
 DROP TABLE IF EXISTS Notificacion;
 DROP TABLE IF EXISTS Comentario;

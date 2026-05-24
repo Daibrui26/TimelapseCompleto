@@ -36,6 +36,8 @@ builder.Services.AddScoped<IComentarioRepository,     ComentarioRepository>();
 builder.Services.AddScoped<IContenidoRepository,      ContenidoRepository>();
 builder.Services.AddScoped<INotificacionRepository,   NotificacionRepository>();
 builder.Services.AddScoped<IUsuarioCapsulaRepository, UsuarioCapsulaRepository>();
+builder.Services.AddScoped<IPostRepository,            PostRepository>();
+builder.Services.AddScoped<IComentarioPostRepository,  ComentarioPostRepository>();
 
 // Services
 builder.Services.AddScoped<IUsuarioService,        UsuarioService>();
@@ -46,6 +48,8 @@ builder.Services.AddScoped<IContenidoService,      ContenidoService>();
 builder.Services.AddScoped<INotificacionService,   NotificacionService>();
 builder.Services.AddScoped<IUsuarioCapsulaService, UsuarioCapsulaService>();
 builder.Services.AddScoped<IUploadService,         CloudinaryUploadService>();
+builder.Services.AddScoped<IPostService,               PostService>();
+builder.Services.AddScoped<IComentarioPostService,     ComentarioPostService>();
 
 var app = builder.Build();
 

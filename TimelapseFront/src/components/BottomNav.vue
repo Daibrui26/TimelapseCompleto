@@ -5,19 +5,25 @@
       class="nav-bottom__btn"
       :class="{ 'nav-bottom__btn--active': route.name === 'Home' }"
       title="Inicio"
-    >★</RouterLink>
+    >🏠</RouterLink>
     <RouterLink
       to="/explorar"
       class="nav-bottom__btn"
       :class="{ 'nav-bottom__btn--active': route.name === 'Explorar' }"
       title="Explorar"
-    >★</RouterLink>
+    >🔍</RouterLink>
     <RouterLink
-      to="/notificaciones"
+      to="/tus-capsulas"
       class="nav-bottom__btn"
-      :class="{ 'nav-bottom__btn--active': route.name === 'Notificaciones' }"
-      title="Notificaciones"
-    >★</RouterLink>
+      :class="{ 'nav-bottom__btn--active': route.name === 'TusCapsulas' }"
+      title="Tus cápsulas"
+    >⏳</RouterLink>
+    <RouterLink
+      to="/menu"
+      class="nav-bottom__btn"
+      :class="{ 'nav-bottom__btn--active': route.name === 'Menu' }"
+      title="Menú"
+    >☰</RouterLink>
   </nav>
 </template>
 
